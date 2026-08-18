@@ -3,6 +3,8 @@ import { ArrowDown, ArrowLeft, Check, Clipboard, Download, Facebook, FileVideo, 
 
 type Platform = { name: string; icon: typeof Youtube; color: string };
 type Quality = { label: string; detail: string; size: string; recommended?: boolean };
+type ResolvedFormat = { formatId: string; ext?: string; width?: number; height?: number; fps?: number; filesize?: number; hasAudio?: boolean; hasVideo?: boolean };
+type PreviewInfo = { title?: string; thumbnail?: string; duration?: number; uploader?: string; formats: ResolvedFormat[] };
 
 const platforms: Platform[] = [
   { name: "YouTube", icon: Youtube, color: "#ff3b30" }, { name: "TikTok", icon: Video, color: "#36e0e8" },
@@ -45,6 +47,8 @@ export default function Home() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [showQualities, setShowQualities] = useState(false);
+  const [resolvedFormats, setResolvedFormats] = useState<ResolvedFormat[]>([]);
+  const [previewInfo, setPreviewInfo] = useState<PreviewInfo | null>(null);
   const t = copy[language];
   useEffect(() => {
     document.documentElement.lang = language;
@@ -52,16 +56,33 @@ export default function Home() {
   }, [language, t.dir]);
   const platform = useMemo(() => (url ? detectPlatform(url) : ""), [url]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!url.trim()) { setStatus("error"); setMessage(t.empty); setShowQualities(false); return; }
     try { const parsed = new URL(url.trim()); if (!parsed.protocol.startsWith("http")) throw new Error("invalid"); }
     catch { setStatus("error"); setMessage(t.invalid); setShowQualities(false); return; }
-    setStatus("loading"); setShowQualities(false); setMessage(t.checking);
-    window.setTimeout(() => { setStatus("success"); setMessage(`${t.result} · ${platform || t.unknown}`); setShowQualities(true); }, 700);
+    setStatus("loading"); setShowQualities(false); setResolvedFormats([]); setPreviewInfo(null); setMessage(t.checking);
+    try {
+      const response = await fetch(`/downloader/preview?url=${encodeURIComponent(url.trim())}`);
+      const data = await response.json().catch(() => ({})) as PreviewInfo & { error?: string };
+      if (!response.ok) throw new Error(data.error || `preview_${response.status}`);
+      if (!Array.isArray(data.formats) || data.formats.length === 0) throw new Error("no_formats");
+      setPreviewInfo(data); setResolvedFormats(data.formats); setStatus("success"); setMessage(`${t.result} · ${platform || t.unknown}`); setShowQualities(true);
+    } catch (error) {
+      let detail = "";
+      if (error instanceof Error && error.message) detail = error.message;
+      const fallback = language === "ar" ? "تعذر الوصول إلى خدمة التنزيل." : "The downloader service could not be reached.";
+      setStatus("error"); setMessage(detail || fallback);
+    }
   };
 
   const copyExample = async () => { await navigator.clipboard?.writeText("https://www.youtube.com/watch?v=example"); setUrl("https://www.youtube.com/watch?v=example"); setStatus("idle"); setShowQualities(false); };
-  const downloadQuality = (quality: Quality) => { setMessage(`${quality.label} — ${t.downloadQuality} ${platform || t.unknown}`); setStatus("success"); };
+  const downloadQuality = (quality: Quality | ResolvedFormat) => {
+    if ("formatId" in quality) {
+      window.location.href = `/downloader/download?url=${encodeURIComponent(url.trim())}&format_id=${encodeURIComponent(quality.formatId)}`;
+      return;
+    }
+    setMessage(`${quality.label} — ${t.downloadQuality} ${platform || t.unknown}`); setStatus("success");
+  };
 
   return <main className={dark ? "app dark" : "app light"} dir={t.dir}>
     <div className="ambient ambient-one" /><div className="ambient ambient-two" />
@@ -71,7 +92,7 @@ export default function Home() {
     </header>
     <section id="top" className="hero container"><div className="eyebrow"><span className="eyebrow-dot" />{t.eyebrow}</div><div className="hero-icon"><Link2 size={27} /></div><h1>{t.titleA}<br /><span>{t.titleB}</span></h1><p className="hero-copy">{t.desc}<br />{t.desc2}</p>
       <div id="downloader" className="download-card"><div className="input-row"><div className="input-wrap"><Link2 size={18} /><input value={url} onChange={e => { setUrl(e.target.value); setStatus("idle"); setShowQualities(false); }} onKeyDown={e => e.key === "Enter" && handleDownload()} placeholder={t.placeholder} aria-label="Video URL" /><button className="paste-button" onClick={copyExample}><Clipboard size={15} />{t.example}</button></div><button className="download-button" onClick={handleDownload}><Download size={18} />{t.download}</button></div><div className="platform-strip">{platforms.map(({ name, icon: Icon, color }) => <span key={name} className="platform-pill"><Icon size={14} color={color} />{name}</span>)}</div>{status !== "idle" && <div className={`status ${status}`}><span className="status-dot">{status === "success" ? <Check size={13} /> : status === "loading" ? <span className="spinner" /> : "!"}</span>{message}</div>}
-        {showQualities && <div className="quality-panel"><div className="quality-header"><div><strong>{t.result}</strong><small>{platform || t.unknown}</small></div><span><ShieldCheck size={14} />{t.note}</span></div><div className="quality-list">{qualities.map(q => <div className="quality-row" key={q.label}><div className="quality-badge"><ArrowDown size={15} /><b>{q.label}</b></div><div className="quality-info"><strong>{q.detail}</strong><span>{q.size}{q.recommended && <em>{t.best}</em>}</span></div><button className="quality-download" onClick={() => downloadQuality(q)}><Download size={14} />{t.downloadQuality}</button></div>)}</div></div>}
+        {showQualities && <div className="quality-panel">{previewInfo?.thumbnail && <div className="preview-card"><img src={previewInfo.thumbnail} alt={previewInfo.title || "Video preview"} /><div><strong>{previewInfo.title || t.result}</strong><small>{previewInfo.uploader || platform || t.unknown}</small></div></div>}<div className="quality-header"><div><strong>{t.result}</strong><small>{previewInfo?.title || platform || t.unknown}</small></div><span><ShieldCheck size={14} />{t.note}</span></div><div className="quality-list">{resolvedFormats.map((q) => <div className="quality-row" key={q.formatId}><div className="quality-badge"><ArrowDown size={15} /><b>{q.height ? `${q.height}p` : q.ext?.toUpperCase() || "Media"}</b></div><div className="quality-info"><strong>{q.ext?.toUpperCase() || "VIDEO"} · {q.hasVideo ? "Video" : "Audio"}</strong><span>{q.hasAudio ? "Audio" : "No audio"}{q.fps ? ` · ${q.fps}fps` : ""}</span></div><button className="quality-download" onClick={() => downloadQuality(q)}><Download size={14} />{t.downloadQuality}</button></div>)}</div></div>}
       </div><div className="privacy-note"><ShieldCheck size={14} />{t.privacy}</div>
     </section>
     <section id="how" className="section container"><div className="section-heading"><span>{t.simple}</span><h2>{t.why}</h2></div><div className="feature-grid">{t.steps.map((step, i) => <article key={step}><span className="step">0{i + 1}</span><h3>{step}</h3><p>{t.stepText[i]}</p></article>)}</div></section>
