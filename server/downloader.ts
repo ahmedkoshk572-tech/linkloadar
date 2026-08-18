@@ -20,15 +20,21 @@ function validatePublicUrl(value: unknown): string {
   return value;
 }
 
+export function classifyYtdlpError(stderr: string): string {
+  const value = stderr.toLowerCase();
+  if (value.includes("sign in") || value.includes("cookies")) return "This source requires sign-in or cookies and cannot be processed anonymously";
+  if (value.includes("403") || value.includes("forbidden")) return "The source rejected access (403)";
+  if (value.includes("drm") || value.includes("encrypted") || value.includes("protected content")) return "DRM or protected content cannot be downloaded";
+  return "The public URL is unavailable or unsupported";
+}
+
 async function inspect(url: string) {
   try {
     const { stdout } = await execFileAsync("yt-dlp", ["--dump-single-json", "--no-warnings", "--skip-download", "--no-playlist", url], { timeout: 45_000, maxBuffer: 8 * 1024 * 1024 });
     return JSON.parse(stdout) as Record<string, unknown>;
   } catch (error) {
-    const stderr = String((error as { stderr?: string }).stderr || "").toLowerCase();
-    if (stderr.includes("sign in") || stderr.includes("cookies")) throw new Error("This source requires sign-in or cookies and cannot be processed anonymously");
-    if (stderr.includes("403") || stderr.includes("forbidden")) throw new Error("The source rejected access (403)");
-    throw new Error("The public URL is unavailable or unsupported");
+    const stderr = String((error as { stderr?: string }).stderr || "");
+    throw new Error(classifyYtdlpError(stderr));
   }
 }
 
@@ -73,10 +79,8 @@ export function registerDownloaderRoutes(app: Express) {
       return undefined;
     } catch (error) {
       if (folder) await rm(folder, { recursive: true, force: true }).catch(() => undefined);
-      const stderr = String((error as { stderr?: string }).stderr || "").toLowerCase();
-      if (stderr.includes("sign in") || stderr.includes("cookies")) return res.status(422).json({ error: "This source requires sign-in or cookies" });
-      if (stderr.includes("403") || stderr.includes("forbidden")) return res.status(422).json({ error: "The source rejected access (403)" });
-      return res.status(422).json({ error: error instanceof Error ? error.message : "Unable to download URL" });
+      const stderr = String((error as { stderr?: string }).stderr || "");
+      return res.status(422).json({ error: classifyYtdlpError(stderr) });
     }
   });
 }
