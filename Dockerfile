@@ -1,7 +1,7 @@
 FROM node:22-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 ffmpeg ca-certificates \
+    python3 python3-venv ffmpeg ca-certificates \
     && python3 -m venv /opt/yt-dlp-env \
     && /opt/yt-dlp-env/bin/pip install --no-cache-dir --upgrade yt-dlp \
     && ln -s /opt/yt-dlp-env/bin/yt-dlp /usr/local/bin/yt-dlp \
