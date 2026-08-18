@@ -1,5 +1,9 @@
 import type { Express, Request, Response } from "express";
-import { execFile, spawn } from "node:child_process";
+import { execFile } from "node:child_process";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { promisify } from "node:util";
 import { URL } from "node:url";
 
@@ -45,21 +49,34 @@ export function registerDownloaderRoutes(app: Express) {
     }
   });
 
-  app.get("/downloader/download", (req: Request, res: Response) => {
+  app.get("/downloader/download", async (req: Request, res: Response) => {
+    let folder = "";
     try {
       const url = validatePublicUrl(req.query.url);
       const formatId = typeof req.query.format_id === "string" && /^[\w+./-]+$/.test(req.query.format_id) ? req.query.format_id : null;
       if (!formatId) return res.status(400).json({ error: "A valid format_id is required" });
-      res.setHeader("Content-Type", "application/octet-stream");
-      res.setHeader("Content-Disposition", "attachment; filename=linkload-video");
-      const child = spawn("yt-dlp", ["--no-warnings", "--no-playlist", "-f", formatId, "-o", "-", url], { stdio: ["ignore", "pipe", "pipe"] });
-      child.stdout.pipe(res);
-      child.stderr.on("data", chunk => console.warn(`[downloader] ${String(chunk).trim()}`));
-      child.on("error", () => { if (!res.headersSent) res.status(503).json({ error: "Downloader engine is unavailable" }); else res.end(); });
-      req.on("close", () => { if (!child.killed) child.kill("SIGTERM"); });
+      folder = await mkdtemp(join(tmpdir(), "linkload-"));
+      const output = join(folder, "video.%(ext)s");
+      const selector = `${formatId}+bestaudio/${formatId}/best`;
+      await execFileAsync("yt-dlp", ["--no-warnings", "--no-playlist", "--merge-output-format", "mp4", "-f", selector, "-o", output, url], { timeout: 180_000, maxBuffer: 2 * 1024 * 1024 });
+      const files = (await readdir(folder)).filter(file => /\.(mp4|webm|mkv|mov|mp3|m4a)$/i.test(file));
+      if (!files.length) return res.status(502).json({ error: "The downloader did not produce a media file" });
+      const filename = files[0];
+      const ext = filename.split(".").pop()?.toLowerCase() || "mp4";
+      const mime = ext === "mp3" ? "audio/mpeg" : ext === "webm" ? "video/webm" : ext === "m4a" ? "audio/mp4" : "video/mp4";
+      res.setHeader("Content-Type", mime);
+      res.setHeader("Content-Disposition", `attachment; filename=\"linkload-video.${ext}\"`);
+      const stream = createReadStream(join(folder, filename));
+      stream.on("close", () => { void rm(folder, { recursive: true, force: true }); });
+      stream.on("error", () => { if (!res.headersSent) res.status(502).json({ error: "The media file could not be read" }); });
+      stream.pipe(res);
       return undefined;
     } catch (error) {
-      return res.status(400).json({ error: error instanceof Error ? error.message : "Unable to download URL" });
+      if (folder) await rm(folder, { recursive: true, force: true }).catch(() => undefined);
+      const stderr = String((error as { stderr?: string }).stderr || "").toLowerCase();
+      if (stderr.includes("sign in") || stderr.includes("cookies")) return res.status(422).json({ error: "This source requires sign-in or cookies" });
+      if (stderr.includes("403") || stderr.includes("forbidden")) return res.status(422).json({ error: "The source rejected access (403)" });
+      return res.status(422).json({ error: error instanceof Error ? error.message : "Unable to download URL" });
     }
   });
 }
