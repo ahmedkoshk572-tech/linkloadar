@@ -75,3 +75,18 @@
 - [ ] إضافة إعداد vercel.json لتوجيه Vercel إلى dist/public
 - [ ] إعادة نشر Vercel والتحقق من ظهور واجهة HTML
 - [ ] توضيح أن yt-dlp وffmpeg لا يعملان داخل Vercel تلقائيًا دون backend منفصل
+- [ ] التحقق من اتصال Render وحساب الاستضافة
+- [ ] تجهيز خدمة Backend Docker لتشغيل yt-dlp وffmpeg
+- [ ] نشر Backend وربطه بواجهة Vercel عبر VITE_DOWNLOADER_API_URL
+- [ ] اختبار health والمعاينة والجودات والتنزيل من الرابط المنشور
+- [ ] تقييم تشغيل مسارات yt-dlp وffmpeg داخل Vercel
+- [ ] ضبط Vercel ليخدم الواجهة وAPI بشكل صحيح إن أمكن
+- [ ] إعادة نشر linkloadar والتحقق من الصفحة الرئيسية
+- [ ] اختبار المعاينة والتنزيل وتوثيق ما يعمل فعليًا على Vercel
+- [ ] التحقق من خدمة Render الجديدة المرتبطة بمستودع linkloadar
+- [ ] ضبط Docker وyt-dlp وffmpeg ومتغيرات Backend
+- [ ] ضبط CORS وربط Vercel بعنوان Render
+- [ ] اختبار health والمعاينة والجودات والتنزيل الحقيقي
+- [ ] مزامنة آخر نسخة كاملة من المشروع إلى مستودع linkloadar
+- [ ] إبقاء Dockerfile وyt-dlp وffmpeg ومسارات التنزيل والاختبارات
+- [ ] مقارنة قائمة ملفات المشروع مع GitHub بعد المزامنة
