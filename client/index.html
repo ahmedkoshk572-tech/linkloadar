@@ -5,8 +5,15 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#08080f" />
+    <meta name="color-scheme" content="dark" />
     <title>لينك لود — محمّل الروابط</title>
+    <style>
+      html,body,#root{margin:0;min-height:100%;background:#08080f}
+      .boot-screen{min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,#17102f 0,#08080f 55%);color:#f8f7ff;font:600 18px system-ui,-apple-system,sans-serif}
+      .boot-brand{display:flex;align-items:center;gap:10px}.boot-mark{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#6b3df5,#9d72ff);box-shadow:0 10px 35px #743cff55}.boot-dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:bootPulse 1s ease-in-out infinite}@keyframes bootPulse{50%{opacity:.35;transform:scale(.75)}}
+    </style>
     <meta name="description" content="حمّل الفيديوهات عبر الروابط من المنصات المدعومة بسهولة وأمان." />    
     <!-- THIS IS THE START OF A COMMENT BLOCK, BLOCK TO BE DELETED: Google Fonts here, example:
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,7 +23,7 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot-screen" aria-label="Loading"><div class="boot-brand"><span class="boot-mark">▶</span><span>LinkLoad</span><span class="boot-dot"></span></div></div></div>
     <script type="module" src="/src/main.tsx"></script>
     <script
       defer
