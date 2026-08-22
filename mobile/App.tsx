@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, AppState, FlatList, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,7 +18,14 @@ export default function App() {
   const [message, setMessage] = useState("ألصق رابط فيديو عام ومسموح بتنزيله.");
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
 
-  useEffect(() => { health().then(() => setApiReady(true)).catch(() => setApiReady(false)); }, []);
+  useEffect(() => {
+    let mounted = true;
+    const checkHealth = () => health().then(() => mounted && setApiReady(true)).catch(() => mounted && setApiReady(false));
+    checkHealth();
+    const interval = setInterval(checkHealth, 15000);
+    const subscription = AppState.addEventListener("change", (state) => { if (state === "active") checkHealth(); });
+    return () => { mounted = false; clearInterval(interval); subscription.remove(); };
+  }, []);
 
   const videoFormats = useMemo(() => preview?.formats.filter((format) => format.hasVideo) ?? [], [preview]);
 
@@ -52,7 +59,10 @@ export default function App() {
     } catch (error) {
       setDownloads((items) => items.map((item) => item.id === id ? { ...item, status: "failed" } : item));
       setMessage(error instanceof Error ? error.message : "تعذر تنزيل الملف.");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+      health().then(() => setApiReady(true)).catch(() => setApiReady(false));
+    }
   }
 
   async function share(item: DownloadItem) {
