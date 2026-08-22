@@ -9,7 +9,7 @@
     "scheme": "linkload",
     "android": {
       "package": "com.linkload.app",
-      "versionCode": 4,
+      "versionCode": 5,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon-foreground.png",
         "backgroundColor": "#08080f"
