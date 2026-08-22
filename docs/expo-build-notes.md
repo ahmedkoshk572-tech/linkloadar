@@ -18,3 +18,15 @@ A Personal Access Token named `LinkLoad Build` was successfully created in Expo 
 The EAS preview build finished successfully as build `24a10a8f-2541-4077-9dd0-3ce9ff2f21ca`. The APK artifact was downloaded locally as `/home/ubuntu/LinkLoad.apk`; SHA-256: `87226b6feca1e8fc425deacf8b1484135304761befda47a02fa965df52efd2b2`. The temporary `LinkLoad Build` token remains active and should be revoked after the build session is no longer needed.
 
 The EAS token deletion confirmation was submitted after the APK build. The APK is available locally at `/home/ubuntu/LinkLoad.apk` and must be attached to the user; no token secret is stored in the repository.
+
+A temporary test backend is running on the sandbox port 8787 and is publicly exposed over HTTPS. Its health endpoint returned HTTP 200, and the user's Facebook share URL returned HTTP 200 with title, thumbnail, duration, and real formats. YouTube and Vimeo test URLs returned expected source-side 422 errors (YouTube unavailable/anti-bot and Vimeo login requirement).
+
+A second preview APK build was completed with `EXPO_PUBLIC_API_URL` pointing to the temporary public backend. The backend successfully analyzed the user's Facebook URL and an actual download test returned HTTP 200 with a valid 2.3 MB ISO Base Media MP4 file. The APK artifact is ready to download; the temporary EAS token will be revoked after artifact retrieval.
+
+The free-test APK build completed successfully as EAS build `b5a1f158-080f-4861-8b66-4213fcbafdd5`. The temporary backend analyzed the user's Facebook URL and streamed a valid 2.3 MB MP4 with HTTP 200. The new APK artifact is connected to the temporary backend URL and is ready for download; the temporary EAS token remains only long enough to retrieve the artifact and will then be deleted.
+
+A new temporary token named `LinkLoad Final Test Build` was created after the previous token was revoked. It is being used only to build the corrected APK with the temporary backend URL embedded.
+
+The corrected free-test APK build `3eab7b6e-9f3e-49d3-aea2-772fdfea50ff` was downloaded as `/home/ubuntu/LinkLoad-free-test.apk`. Verification confirmed the temporary backend URL is embedded in `assets/index.android.bundle`. The source code was then restored to the configurable placeholder URL so the temporary endpoint is not committed to the repository.
+
+The corrected APK is verified and downloaded as `/home/ubuntu/LinkLoad-free-test.apk`; the active EAS token is only being revoked now for cleanup.
