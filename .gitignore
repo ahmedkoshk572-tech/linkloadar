@@ -111,4 +111,9 @@ temp/
 
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
+
+# Temporary local downloader gateway used for sandbox testing
+downloader-service/test_app.py
+downloader-service/__pycache__/
+
 .project-config.json
