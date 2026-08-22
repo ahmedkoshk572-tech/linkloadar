@@ -9,3 +9,5 @@ Adsterra's official Smartlink page describes Smartlink as one URL that selects r
 Implementation implication for LinkLoad: the currently documented Adsterra path is a user-triggered external Smart Direct Link, not a native Android banner/interstitial SDK integration. LinkLoad is a native Expo/React Native app, so the implementation should avoid turning it into a WebView. The app should only add an intentional ad button/card after the user provides an active Adsterra Smartlink URL and confirms the desired placement.
 
 Build note: the Expo personal access-token page is available under the logged-in account. Only the previously revoked token is listed; no active token value is stored in the project. A new temporary token is required for the next APK build and will be deleted after the artifact is downloaded.
+
+Build note: APK build 3 completed successfully and was downloaded locally. Verification confirmed that the compiled Android bundle contains both the Adsterra Smartlink host and the temporary Backend URL. The source tree was restored to the configurable Backend placeholder and pushed to GitHub; the test URL is only in the APK artifact.

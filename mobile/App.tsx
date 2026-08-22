@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, AppState, FlatList, Image, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
+import * as MediaLibrary from "expo-media-library";
 import { Ionicons } from "@expo/vector-icons";
 import { analyze, downloadUrl, health, type MediaFormat, type PreviewInfo } from "./src/api";
 
@@ -41,13 +42,17 @@ export default function App() {
   const videoFormats = useMemo(() => preview?.formats.filter((format) => format.hasVideo) ?? [], [preview]);
 
   async function performAnalyze(targetUrl: string) {
-    setBusy(true); setPreview(null); setSelected(null); setMessage("جارٍ فحص الرابط والجودات الفعلية...");
+    setBusy(true); setPreview(null); setSelected(null); setMessage("جارٍ فحص الرابط وبدء التنزيل التلقائي...");
     try {
       const result = await analyze(targetUrl);
-      if (!result.formats?.length) throw new Error("لم يجد الخادم صيغة متاحة لهذا الرابط.");
-      setPreview(result); setSelected(result.formats.find((format) => format.hasVideo) ?? result.formats[0]); setMessage("تم العثور على الجودات المتاحة فعليًا.");
-    } catch (error) { setMessage(error instanceof Error ? error.message : "تعذر فحص الرابط."); }
-    finally { setBusy(false); }
+      const automaticFormat = chooseBestFormat(result.formats ?? []);
+      if (!automaticFormat) throw new Error("لم يجد الخادم صيغة فيديو متاحة لهذا الرابط.");
+      setMessage("تم اختيار أفضل جودة مع الصوت. جارٍ تنزيل الملف وحفظه على الجهاز...");
+      void handleDownload(automaticFormat, result.title);
+    } catch (error) {
+      setBusy(false);
+      setMessage(error instanceof Error ? error.message : "تعذر فحص الرابط.");
+    }
   }
 
   async function handleAnalyze() {
@@ -64,9 +69,9 @@ export default function App() {
     }
   }
 
-  async function handleDownload(format: MediaFormat) {
+  async function handleDownload(format: MediaFormat, titleOverride?: string) {
     const id = `${Date.now()}`;
-    const title = preview?.title ?? "LinkLoad video";
+    const title = titleOverride ?? preview?.title ?? "LinkLoad video";
     const ext = format.ext ?? "mp4";
     setDownloads((items) => [{ id, title, progress: 0, status: "downloading", ext }, ...items]);
     setBusy(true); setMessage("جارٍ تنزيل الملف في الخلفية...");
@@ -77,8 +82,15 @@ export default function App() {
         setDownloads((items) => items.map((item) => item.id === id ? { ...item, progress } : item));
       });
       const result = await task.downloadAsync();
-      setDownloads((items) => items.map((item) => item.id === id ? { ...item, progress: 100, status: "completed", uri: result?.uri } : item));
-      setMessage("اكتمل التنزيل. يمكنك مشاركة الملف أو فتحه من سجل التنزيلات.");
+      if (!result?.uri) throw new Error("لم يتم إنشاء ملف التنزيل.");
+      const permission = await MediaLibrary.requestPermissionsAsync();
+      if (!permission.granted) throw new Error("اسمح للتطبيق بالوصول إلى الصور والملفات لحفظ الفيديو على الجهاز.");
+      const asset = await MediaLibrary.createAssetAsync(result.uri);
+      const album = await MediaLibrary.getAlbumAsync("LinkLoad");
+      if (album) await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      else await MediaLibrary.createAlbumAsync("LinkLoad", asset, false);
+      setDownloads((items) => items.map((item) => item.id === id ? { ...item, progress: 100, status: "completed", uri: asset.uri } : item));
+      setMessage("اكتمل التنزيل وحُفظ الفيديو مباشرة في الجهاز داخل مجلد LinkLoad.");
       setPreview(null); setUrl("");
     } catch (error) {
       setDownloads((items) => items.map((item) => item.id === id ? { ...item, status: "failed" } : item));
@@ -87,6 +99,16 @@ export default function App() {
       setBusy(false);
       health().then(() => setApiReady(true)).catch(() => setApiReady(false));
     }
+  }
+
+  function chooseBestFormat(formats: MediaFormat[]) {
+    const videoFormats = formats.filter((format) => format.hasVideo);
+    return [...videoFormats].sort((a, b) => {
+      const aHasAudio = Number(Boolean(a.hasAudio) || a.formatId.includes("+bestaudio"));
+      const bHasAudio = Number(Boolean(b.hasAudio) || b.formatId.includes("+bestaudio"));
+      if (aHasAudio !== bHasAudio) return bHasAudio - aHasAudio;
+      return (b.height ?? 0) - (a.height ?? 0);
+    })[0] ?? formats[0];
   }
 
   async function openAd() {

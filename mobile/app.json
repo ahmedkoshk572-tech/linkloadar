@@ -22,7 +22,8 @@
     },
     "plugins": [
       "expo-file-system",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-media-library"
     ],
     "extra": {
       "apiUrl": "${EXPO_PUBLIC_API_URL}",
