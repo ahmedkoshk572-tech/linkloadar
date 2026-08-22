@@ -7,7 +7,7 @@ import { analyze, downloadUrl, health, type MediaFormat, type PreviewInfo } from
 
 type Tab = "home" | "history" | "settings";
 type DownloadItem = { id: string; title: string; progress: number; status: "downloading" | "completed" | "failed"; ext: string; uri?: string };
-const ADSTERRA_SMARTLINK = "https://www.profitableratecpmnetwork.com/t0ep728f9?key=82b204ddc210927c29a958a3cae2e1ce";
+const ADSTERRA_SMARTLINK = "https://www.profitableratecpmnetwork.com/bzxi45g82?key=3a29179c0eac28c72d162db955abdd06";
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("home");
