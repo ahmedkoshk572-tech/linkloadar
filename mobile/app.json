@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "LinkLoad",
+    "slug": "linkload",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "linkload",
+    "android": {
+      "package": "com.linkload.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#08080f"
+      }
+    },
+    "plugins": ["expo-file-system", "expo-secure-store"],
+    "extra": {
+      "apiUrl": "${EXPO_PUBLIC_API_URL}"
+    }
+  }
+}

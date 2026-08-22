@@ -55,3 +55,32 @@ pnpm test
 pnpm check
 pnpm build
 ```
+
+## تطبيق Android الأصلي
+
+يحتوي المستودع على تطبيق Android أصلي داخل مجلد `mobile/` باستخدام Expo وReact Native، وليس WebView. يدعم التطبيق فحص الرابط، عرض الصورة والعنوان والجودات الحقيقية، تنزيل الملف إلى الجهاز، مشاركة الملف، سجل التنزيلات، وحالة اتصال الـBackend.
+
+للتشغيل:
+
+```bash
+cd mobile
+cp .env.example .env
+pnpm install
+pnpm start
+```
+
+لبناء APK تجريبي:
+
+```bash
+cd mobile
+npx eas login
+eas build --platform android --profile preview
+```
+
+بعد شراء VPS، ضع رابط Backend في `mobile/.env`:
+
+```bash
+EXPO_PUBLIC_API_URL=https://your-downloader-backend.example.com
+```
+
+يتم تضمين عنوان الخادم وقت بناء التطبيق، لذلك يجب إعادة بناء APK عند تغيير العنوان إلى أن تتم إضافة Remote Config في مرحلة لاحقة.
