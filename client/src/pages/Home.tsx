@@ -6,6 +6,9 @@ type Quality = { label: string; detail: string; size: string; recommended?: bool
 type ResolvedFormat = { formatId: string; ext?: string; width?: number; height?: number; fps?: number; filesize?: number; hasAudio?: boolean; hasVideo?: boolean };
 type PreviewInfo = { title?: string; thumbnail?: string; duration?: number; uploader?: string; formats: ResolvedFormat[] };
 
+const DOWNLOADER_API_URL = (import.meta.env.VITE_DOWNLOADER_API_URL || "").replace(/\/$/, "");
+const downloaderUrl = (path: string) => `${DOWNLOADER_API_URL}${path}`;
+
 const platforms: Platform[] = [
   { name: "YouTube", icon: Youtube, color: "#ff3b30" }, { name: "TikTok", icon: Video, color: "#36e0e8" },
   { name: "Facebook", icon: Facebook, color: "#1877f2" }, { name: "Instagram", icon: Video, color: "#ef4b9b" },
@@ -62,7 +65,7 @@ export default function Home() {
     catch { setStatus("error"); setMessage(t.invalid); setShowQualities(false); return; }
     setStatus("loading"); setShowQualities(false); setResolvedFormats([]); setPreviewInfo(null); setMessage(t.checking);
     try {
-      const response = await fetch(`/downloader/preview?url=${encodeURIComponent(url.trim())}`);
+      const response = await fetch(downloaderUrl(`/downloader/preview?url=${encodeURIComponent(url.trim())}`));
       const data = await response.json().catch(() => ({})) as PreviewInfo & { error?: string };
       if (!response.ok) throw new Error(data.error || `preview_${response.status}`);
       if (!Array.isArray(data.formats) || data.formats.length === 0) throw new Error("no_formats");
@@ -78,7 +81,7 @@ export default function Home() {
   const copyExample = async () => { await navigator.clipboard?.writeText("https://www.youtube.com/watch?v=example"); setUrl("https://www.youtube.com/watch?v=example"); setStatus("idle"); setShowQualities(false); };
   const downloadQuality = (quality: Quality | ResolvedFormat) => {
     if ("formatId" in quality) {
-      window.location.href = `/downloader/download?url=${encodeURIComponent(url.trim())}&format_id=${encodeURIComponent(quality.formatId)}`;
+      window.location.href = downloaderUrl(`/downloader/download?url=${encodeURIComponent(url.trim())}&format_id=${encodeURIComponent(quality.formatId)}`);
       return;
     }
     setMessage(`${quality.label} — ${t.downloadQuality} ${platform || t.unknown}`); setStatus("success");
