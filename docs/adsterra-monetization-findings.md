@@ -13,3 +13,7 @@ Build note: the Expo personal access-token page is available under the logged-in
 Build note: APK build 3 completed successfully and was downloaded locally. Verification confirmed that the compiled Android bundle contains both the Adsterra Smartlink host and the temporary Backend URL. The source tree was restored to the configurable Backend placeholder and pushed to GitHub; the test URL is only in the APK artifact.
 
 Build note: a new temporary Expo access token named "LinkLoad Direct Save Build" was created in the logged-in Expo account for the APK build. Its value is intentionally not stored in project files or documentation and will be revoked after the APK artifact is downloaded.
+
+Build note: APK build 4 completed and was downloaded successfully. The archive passed integrity checks, and the compiled bundle contains the new Smartlink host, the temporary Backend URL, and the automatic MediaLibrary save flow. The source Backend URL was restored to its configurable placeholder afterward.
+
+Build note: APK build 4 (direct-save flow) was downloaded and passed archive integrity checks. The bundle contains the new Adsterra Smartlink and the temporary Backend URL used only for this test build. Source code was restored to the configurable Backend placeholder before release.
