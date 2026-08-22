@@ -11,3 +11,5 @@ Implementation implication for LinkLoad: the currently documented Adsterra path 
 Build note: the Expo personal access-token page is available under the logged-in account. Only the previously revoked token is listed; no active token value is stored in the project. A new temporary token is required for the next APK build and will be deleted after the artifact is downloaded.
 
 Build note: APK build 3 completed successfully and was downloaded locally. Verification confirmed that the compiled Android bundle contains both the Adsterra Smartlink host and the temporary Backend URL. The source tree was restored to the configurable Backend placeholder and pushed to GitHub; the test URL is only in the APK artifact.
+
+Build note: a new temporary Expo access token named "LinkLoad Direct Save Build" was created in the logged-in Expo account for the APK build. Its value is intentionally not stored in project files or documentation and will be revoked after the APK artifact is downloaded.
