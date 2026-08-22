@@ -11,11 +11,23 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#08080f"
+      },
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET"
+      ]
+    },
+    "plugins": [
+      "expo-file-system",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "apiUrl": "${EXPO_PUBLIC_API_URL}",
+      "eas": {
+        "projectId": "f70150db-31f9-4c51-9221-571a6ba08dec"
       }
     },
-    "plugins": ["expo-file-system", "expo-secure-store"],
-    "extra": {
-      "apiUrl": "${EXPO_PUBLIC_API_URL}"
-    }
+    "owner": "ahmedabdelaziz199s-team"
   }
 }
